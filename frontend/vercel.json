@@ -5,7 +5,7 @@
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "https://your-mpesa-backend.onrender.com/api/:path*"
+      "destination": "https://mpesa-85if.onrender.com/api/:path*"
     }
   ]
 }
