@@ -7,6 +7,7 @@ const inter = Inter({ subsets: ['latin'] });
 export const metadata = {
   title: 'M-Pesa POS | Payment System',
   description: 'M-Pesa STK Push payment system for Point of Sale',
+  icons: { icon: '/favicon.svg' },
 };
 
 export default function RootLayout({ children }) {
