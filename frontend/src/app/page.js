@@ -3,7 +3,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { initiateStkPush, getPaymentStatus, markTimeout, getSettings } from '@/lib/api';
 import PaymentStatus from '@/components/PaymentStatus';
-import io from 'socket.io-client';
 
 const TIMEOUT_SECONDS = 60;
 const POLL_INTERVAL_MS = 3000;
@@ -78,25 +77,30 @@ export default function HomePage() {
     }, POLL_INTERVAL_MS);
   }, [stopPolling]);
 
-  const setupSocket = useCallback((checkoutRequestId) => {
+  const setupSocket = useCallback(async (checkoutRequestId) => {
     const wsUrl = process.env.NEXT_PUBLIC_WS_URL;
     if (!wsUrl) return;
 
-    const socket = io(wsUrl, { transports: ['websocket', 'polling'] });
-    socketRef.current = socket;
+    try {
+      const { io } = await import('socket.io-client');
+      const socket = io(wsUrl, { transports: ['websocket', 'polling'] });
+      socketRef.current = socket;
 
-    socket.on('connect', () => {
-      socket.emit('subscribe:payment', checkoutRequestId);
-    });
+      socket.on('connect', () => {
+        socket.emit('subscribe:payment', checkoutRequestId);
+      });
 
-    socket.on(`payment:${checkoutRequestId}`, (data) => {
-      handlePaymentUpdate(data);
-      socket.disconnect();
-    });
+      socket.on(`payment:${checkoutRequestId}`, (data) => {
+        handlePaymentUpdate(data);
+        socket.disconnect();
+      });
 
-    socket.on('connect_error', () => {
-      // Silent fail — polling handles this
-    });
+      socket.on('connect_error', () => {
+        // Silent fail — polling handles this
+      });
+    } catch (_) {
+      // socket.io unavailable, polling handles it
+    }
   }, [handlePaymentUpdate]);
 
   // Cleanup on unmount

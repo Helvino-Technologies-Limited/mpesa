@@ -88,13 +88,16 @@ io.on('connection', (socket) => {
 
 const PORT = process.env.PORT || 3001;
 
-initDb()
-  .then(() => {
-    server.listen(PORT, () =>
-      console.log(`M-Pesa POS backend running on port ${PORT}`)
+// Start server; attempt DB migration but don't crash if it fails
+// (schema may already exist from a prior run, or network may be unavailable locally)
+server.listen(PORT, async () => {
+  console.log(`M-Pesa POS backend running on port ${PORT}`);
+  try {
+    await initDb();
+  } catch (err) {
+    console.warn(
+      'DB init warning (schema may already exist or DB unreachable locally):',
+      err.message
     );
-  })
-  .catch((err) => {
-    console.error('Failed to initialize database:', err);
-    process.exit(1);
-  });
+  }
+});

@@ -7,7 +7,7 @@ const pool = new Pool({
   ssl: { rejectUnauthorized: false },
   max: 10,
   idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 5000,
+  connectionTimeoutMillis: 15000,
 });
 
 pool.on('error', (err) => {
@@ -15,19 +15,16 @@ pool.on('error', (err) => {
 });
 
 async function initDb() {
-  const client = await pool.connect();
   try {
     const sql = fs.readFileSync(
       path.join(__dirname, 'migrations', 'init.sql'),
       'utf8'
     );
-    await client.query(sql);
+    await pool.query(sql);
     console.log('Database initialized successfully');
   } catch (err) {
     console.error('Database initialization error:', err);
     throw err;
-  } finally {
-    client.release();
   }
 }
 

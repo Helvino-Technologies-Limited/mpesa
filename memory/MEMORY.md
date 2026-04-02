@@ -1,0 +1,1 @@
+- [M-Pesa POS System](project_mpesa_pos.md) — Full-stack STK Push POS: Express/Render backend, Next.js/Vercel frontend, Neon PostgreSQL
