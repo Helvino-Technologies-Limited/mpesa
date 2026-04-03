@@ -12,12 +12,24 @@ function getBaseUrl(environment) {
 
 async function getSettings() {
   const result = await pool.query('SELECT * FROM settings WHERE id = 1');
-  if (!result.rows.length) throw new Error('Settings not found');
-  const s = result.rows[0];
-  if (!s.consumer_key || !s.consumer_secret || !s.shortcode || !s.passkey) {
+  const s = result.rows[0] || {};
+
+  // Merge DB values with env-var fallbacks (DB takes priority if set)
+  const merged = {
+    ...s,
+    consumer_key:     s.consumer_key     || process.env.MPESA_CONSUMER_KEY     || '',
+    consumer_secret:  s.consumer_secret  || process.env.MPESA_CONSUMER_SECRET  || '',
+    shortcode:        s.shortcode        || process.env.MPESA_SHORTCODE         || '',
+    passkey:          s.passkey          || process.env.MPESA_PASSKEY           || '',
+    environment:      s.environment      || process.env.MPESA_ENVIRONMENT       || 'sandbox',
+    business_name:    s.business_name    || process.env.MPESA_BUSINESS_NAME     || 'My Business',
+  };
+
+  if (!merged.consumer_key || !merged.consumer_secret || !merged.shortcode || !merged.passkey) {
     throw new Error('Daraja credentials are not fully configured. Please update Settings.');
   }
-  return s;
+
+  return merged;
 }
 
 async function getAccessToken(settings) {
