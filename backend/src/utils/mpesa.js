@@ -119,7 +119,7 @@ async function initiateStkPush({ phone, amount, reference, description }) {
 
   const baseUrl = getBaseUrl(settings.environment);
   const response = await axios.post(
-    `${baseUrl}/stkpush/v1/processrequest`,
+    `${baseUrl}/mpesa/stkpush/v1/processrequest`,
     payload,
     {
       headers: {
@@ -148,7 +148,7 @@ async function queryStkStatus(checkoutRequestId) {
 
   const baseUrl = getBaseUrl(settings.environment);
   const response = await axios.post(
-    `${baseUrl}/stkpushquery/v1/query`,
+    `${baseUrl}/mpesa/stkpushquery/v1/query`,
     payload,
     {
       headers: {
