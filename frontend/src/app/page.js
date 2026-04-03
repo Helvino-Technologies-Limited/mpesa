@@ -3,7 +3,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { initiateStkPush, getPaymentStatus, markTimeout, getSettings } from '@/lib/api';
 import PaymentStatus from '@/components/PaymentStatus';
-import PasswordGate from '@/components/PasswordGate';
 
 const TIMEOUT_SECONDS = 60;
 const POLL_INTERVAL_MS = 3000;
@@ -163,7 +162,6 @@ export default function HomePage() {
   };
 
   return (
-    <PasswordGate>
     <div className="min-h-screen">
       {!configured && (
         <a href="/settings" className="block mb-6">
@@ -386,6 +384,5 @@ export default function HomePage() {
         />
       )}
     </div>
-    </PasswordGate>
   );
 }

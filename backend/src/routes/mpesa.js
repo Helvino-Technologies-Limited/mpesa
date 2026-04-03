@@ -5,8 +5,8 @@ const { pool } = require('../db');
 const { initiateStkPush, queryStkStatus } = require('../utils/mpesa');
 const { requireAuth } = require('../middleware/auth');
 
-// POST /api/mpesa/stkpush - Initiate STK Push (requires auth)
-router.post('/stkpush', requireAuth, async (req, res) => {
+// POST /api/mpesa/stkpush - Initiate STK Push (public — cashier-facing)
+router.post('/stkpush', async (req, res) => {
   const { phone, amount, reference, description, cashier_note } = req.body;
 
   if (!phone || !amount) {
