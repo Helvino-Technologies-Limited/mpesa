@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { pool } = require('../db');
 const { getAccessToken, getSettings } = require('../utils/mpesa');
+const { requireAuth } = require('../middleware/auth');
 
 // GET /api/settings - Get current settings (secrets masked)
 router.get('/', async (req, res) => {
@@ -35,8 +36,8 @@ router.get('/', async (req, res) => {
   }
 });
 
-// POST /api/settings - Save/update settings
-router.post('/', async (req, res) => {
+// POST /api/settings - Save/update settings (requires auth)
+router.post('/', requireAuth, async (req, res) => {
   const {
     business_name,
     consumer_key,
@@ -87,8 +88,8 @@ router.post('/', async (req, res) => {
   }
 });
 
-// GET /api/settings/test - Test Daraja connection
-router.get('/test', async (req, res) => {
+// GET /api/settings/test - Test Daraja connection (requires auth)
+router.get('/test', requireAuth, async (req, res) => {
   try {
     const settings = await getSettings();
     const token = await getAccessToken(settings);

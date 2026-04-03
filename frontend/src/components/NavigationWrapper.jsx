@@ -3,9 +3,11 @@
 import { useState, useEffect } from 'react';
 import Navigation from './Navigation';
 import { getSettings } from '@/lib/api';
+import { useAuth } from '@/context/AuthContext';
 
 export default function NavigationWrapper() {
   const [businessName, setBusinessName] = useState('');
+  const { authenticated, logout } = useAuth();
 
   useEffect(() => {
     getSettings()
@@ -13,5 +15,5 @@ export default function NavigationWrapper() {
       .catch(() => {});
   }, []);
 
-  return <Navigation businessName={businessName} />;
+  return <Navigation businessName={businessName} authenticated={authenticated} onLogout={logout} />;
 }

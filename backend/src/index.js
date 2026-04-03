@@ -5,11 +5,13 @@ const http = require('http');
 const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
+const bcrypt = require('bcryptjs');
 const { Server } = require('socket.io');
-const { initDb } = require('./db');
+const { initDb, pool } = require('./db');
 const mpesaRoutes = require('./routes/mpesa');
 const transactionRoutes = require('./routes/transactions');
 const settingsRoutes = require('./routes/settings');
+const authRoutes = require('./routes/auth');
 
 const app = express();
 const server = http.createServer(app);
@@ -55,6 +57,7 @@ const limiter = rateLimit({
 app.use('/api', limiter);
 
 // Routes
+app.use('/api/auth', authRoutes);
 app.use('/api/mpesa', mpesaRoutes);
 app.use('/api/transactions', transactionRoutes);
 app.use('/api/settings', settingsRoutes);
@@ -88,12 +91,53 @@ io.on('connection', (socket) => {
 
 const PORT = process.env.PORT || 3001;
 
+// Seed DB with credentials from env (only if DB row has no consumer_key / no password yet)
+async function seedDefaults() {
+  try {
+    const { rows } = await pool.query(
+      'SELECT consumer_key, admin_password_hash FROM settings WHERE id = 1'
+    );
+    const row = rows[0] || {};
+    const updates = [];
+    const params = [];
+
+    const set = (col, val) => {
+      if (!val) return;
+      params.push(val);
+      updates.push(`${col} = $${params.length}`);
+    };
+
+    if (!row.consumer_key) {
+      set('business_name', process.env.MPESA_BUSINESS_NAME);
+      set('consumer_key', process.env.MPESA_CONSUMER_KEY);
+      set('consumer_secret', process.env.MPESA_CONSUMER_SECRET);
+      set('environment', process.env.MPESA_ENVIRONMENT);
+      set('shortcode', process.env.MPESA_SHORTCODE);
+      set('passkey', process.env.MPESA_PASSKEY);
+    }
+
+    if (!row.admin_password_hash) {
+      const hash = await bcrypt.hash('1234', 10);
+      params.push(hash);
+      updates.push(`admin_password_hash = $${params.length}`);
+    }
+
+    if (updates.length) {
+      await pool.query(`UPDATE settings SET ${updates.join(', ')} WHERE id = 1`, params);
+      console.log('Default settings seeded from environment variables');
+    }
+  } catch (err) {
+    console.warn('Seed defaults warning:', err.message);
+  }
+}
+
 // Start server; attempt DB migration but don't crash if it fails
 // (schema may already exist from a prior run, or network may be unavailable locally)
 server.listen(PORT, async () => {
   console.log(`M-Pesa POS backend running on port ${PORT}`);
   try {
     await initDb();
+    await seedDefaults();
   } catch (err) {
     console.warn(
       'DB init warning (schema may already exist or DB unreachable locally):',

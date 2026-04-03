@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { getTransactions } from '@/lib/api';
 import { format, parseISO } from 'date-fns';
+import PasswordGate from '@/components/PasswordGate';
 
 const STATUS_STYLES = {
   success: 'bg-green-500/20 text-green-400 border border-green-500/30',
@@ -65,6 +66,7 @@ export default function TransactionsPage() {
   const summary = data?.summary;
 
   return (
+    <PasswordGate>
     <div>
       <div className="flex items-center justify-between mb-6">
         <div>
@@ -260,5 +262,6 @@ export default function TransactionsPage() {
         </div>
       )}
     </div>
+    </PasswordGate>
   );
 }

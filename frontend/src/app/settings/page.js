@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { getSettings, saveSettings, testConnection } from '@/lib/api';
+import { getSettings, saveSettings, testConnection, changePassword } from '@/lib/api';
+import PasswordGate from '@/components/PasswordGate';
 
 export default function SettingsPage() {
   const [settings, setSettings] = useState({
@@ -24,6 +25,8 @@ export default function SettingsPage() {
     consumer_secret: false,
     passkey: false,
   });
+  const [pwForm, setPwForm] = useState({ current: '', newPw: '', confirm: '' });
+  const [pwSaving, setPwSaving] = useState(false);
 
   useEffect(() => {
     getSettings()
@@ -64,6 +67,28 @@ export default function SettingsPage() {
 
   const update = (field) => (e) =>
     setSettings((s) => ({ ...s, [field]: e.target.value }));
+
+  async function handleChangePassword(e) {
+    e.preventDefault();
+    if (pwForm.newPw !== pwForm.confirm) {
+      showAlert('error', 'New passwords do not match');
+      return;
+    }
+    if (pwForm.newPw.length < 4) {
+      showAlert('error', 'New password must be at least 4 characters');
+      return;
+    }
+    setPwSaving(true);
+    try {
+      await changePassword(pwForm.current, pwForm.newPw);
+      showAlert('success', 'Password changed successfully');
+      setPwForm({ current: '', newPw: '', confirm: '' });
+    } catch (err) {
+      showAlert('error', err.response?.data?.error || 'Failed to change password');
+    } finally {
+      setPwSaving(false);
+    }
+  }
 
   const toggleSecret = (field) =>
     setShowSecrets((s) => ({ ...s, [field]: !s[field] }));
@@ -109,13 +134,16 @@ export default function SettingsPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-20">
-        <div className="w-8 h-8 border-2 border-mpesa-green/30 border-t-mpesa-green rounded-full animate-spin" />
-      </div>
+      <PasswordGate>
+        <div className="flex items-center justify-center py-20">
+          <div className="w-8 h-8 border-2 border-mpesa-green/30 border-t-mpesa-green rounded-full animate-spin" />
+        </div>
+      </PasswordGate>
     );
   }
 
   return (
+    <PasswordGate>
     <div>
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-white">Settings</h1>
@@ -344,6 +372,66 @@ export default function SettingsPage() {
         </div>
       </form>
 
+      {/* Change Admin Password */}
+      <div className="card p-6 mt-6">
+        <h2 className="text-base font-semibold text-white flex items-center gap-2 mb-4">
+          <div className="w-6 h-6 bg-mpesa-green/20 rounded-lg flex items-center justify-center">
+            <svg className="w-3.5 h-3.5 text-mpesa-green" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+            </svg>
+          </div>
+          Change Admin Password
+        </h2>
+        <form onSubmit={handleChangePassword} className="space-y-3">
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-1.5">Current Password</label>
+            <input
+              type="password"
+              placeholder="Enter current password"
+              value={pwForm.current}
+              onChange={(e) => setPwForm((f) => ({ ...f, current: e.target.value }))}
+              className="input-field"
+              autoComplete="current-password"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-1.5">New Password</label>
+            <input
+              type="password"
+              placeholder="Enter new password (min 4 characters)"
+              value={pwForm.newPw}
+              onChange={(e) => setPwForm((f) => ({ ...f, newPw: e.target.value }))}
+              className="input-field"
+              autoComplete="new-password"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-1.5">Confirm New Password</label>
+            <input
+              type="password"
+              placeholder="Re-enter new password"
+              value={pwForm.confirm}
+              onChange={(e) => setPwForm((f) => ({ ...f, confirm: e.target.value }))}
+              className="input-field"
+              autoComplete="new-password"
+            />
+          </div>
+          <button
+            type="submit"
+            disabled={pwSaving || !pwForm.current || !pwForm.newPw || !pwForm.confirm}
+            className="btn-primary flex items-center justify-center gap-2 w-full sm:w-auto px-6"
+          >
+            {pwSaving ? (
+              <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+            ) : (
+              'Update Password'
+            )}
+          </button>
+        </form>
+        <p className="text-gray-600 text-xs mt-3">Default password is <strong className="text-gray-500">1234</strong> — change it immediately.</p>
+      </div>
+
       {/* Daraja setup guide */}
       <div className="card p-6 mt-6">
         <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-4">
@@ -373,5 +461,6 @@ export default function SettingsPage() {
         </ol>
       </div>
     </div>
+    </PasswordGate>
   );
 }

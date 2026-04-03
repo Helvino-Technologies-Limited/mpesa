@@ -1,6 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const { pool } = require('../db');
+const { requireAuth } = require('../middleware/auth');
+
+// All transaction routes require authentication
+router.use(requireAuth);
 
 // GET /api/transactions - List transactions with pagination and filters
 router.get('/', async (req, res) => {

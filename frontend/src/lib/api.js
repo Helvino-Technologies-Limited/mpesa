@@ -8,6 +8,27 @@ const api = axios.create({
   headers: { 'Content-Type': 'application/json' },
 });
 
+// Attach auth token to every request if present
+api.interceptors.request.use((config) => {
+  if (typeof window !== 'undefined') {
+    const token = sessionStorage.getItem('pos_token');
+    if (token) config.headers['Authorization'] = `Bearer ${token}`;
+  }
+  return config;
+});
+
+// ---------- Auth ----------
+
+export async function verifyPassword(password) {
+  const res = await api.post('/auth/verify', { password });
+  return res.data; // { token }
+}
+
+export async function changePassword(current_password, new_password) {
+  const res = await api.post('/auth/change-password', { current_password, new_password });
+  return res.data;
+}
+
 // ---------- M-Pesa ----------
 
 export async function initiateStkPush(payload) {
