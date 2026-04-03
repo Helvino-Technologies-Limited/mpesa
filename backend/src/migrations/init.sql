@@ -1,8 +1,9 @@
 -- Enable UUID extension
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
--- Add admin_password_hash column if it doesn't exist yet (safe to run on existing DBs)
+-- Add columns if they don't exist yet (safe to run on existing DBs)
 ALTER TABLE settings ADD COLUMN IF NOT EXISTS admin_password_hash VARCHAR(500);
+ALTER TABLE settings ADD COLUMN IF NOT EXISTS account_reference VARCHAR(100);
 
 -- Settings table: stores Daraja API credentials (one row per business/tenant)
 CREATE TABLE IF NOT EXISTS settings (

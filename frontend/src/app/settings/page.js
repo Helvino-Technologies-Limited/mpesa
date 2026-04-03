@@ -14,6 +14,7 @@ export default function SettingsPage() {
     transaction_type: 'CustomerPayBillOnline',
     callback_url: '',
     environment: 'sandbox',
+    account_reference: '',
   });
 
   const [loading, setLoading] = useState(true);
@@ -266,6 +267,23 @@ export default function SettingsPage() {
             </select>
             <p className="text-gray-500 text-xs mt-1">
               Use PayBill for Paybill numbers, Buy Goods for Till numbers
+            </p>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-1.5">
+              Default Account Reference
+            </label>
+            <input
+              type="text"
+              placeholder="e.g. 0740240877 (your Equity/Paybill account number)"
+              value={settings.account_reference || ''}
+              onChange={update('account_reference')}
+              className="input-field"
+              maxLength={100}
+            />
+            <p className="text-gray-500 text-xs mt-1">
+              Pre-filled on every payment form — must match the account that receives the money (e.g. your Equity phone number for Paybill 247247)
             </p>
           </div>
 

@@ -27,6 +27,7 @@ router.get('/', async (req, res) => {
       transaction_type: s.transaction_type || 'CustomerPayBillOnline',
       callback_url: s.callback_url || '',
       environment: s.environment || 'sandbox',
+      account_reference: s.account_reference || '',
       is_configured: !!(s.consumer_key && s.consumer_secret && s.shortcode && s.passkey),
       updated_at: s.updated_at,
     });
@@ -47,6 +48,7 @@ router.post('/', requireAuth, async (req, res) => {
     transaction_type,
     callback_url,
     environment,
+    account_reference,
   } = req.body;
 
   // Build dynamic update — only update fields that are provided and not masked
@@ -69,6 +71,7 @@ router.post('/', requireAuth, async (req, res) => {
   addField('transaction_type', transaction_type);
   addField('callback_url', callback_url);
   addField('environment', environment);
+  addField('account_reference', account_reference);
 
   if (!updates.length) {
     return res.status(400).json({ error: 'No valid fields to update' });

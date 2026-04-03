@@ -21,15 +21,22 @@ export default function HomePage() {
   const [payment, setPayment] = useState(null);  // { status, transaction, checkoutRequestId }
   const [elapsed, setElapsed] = useState(0);
   const [configured, setConfigured] = useState(true);
+  const [defaultRef, setDefaultRef] = useState('');
 
   const pollRef = useRef(null);
   const timerRef = useRef(null);
   const socketRef = useRef(null);
 
-  // Check if settings are configured on mount
+  // Check if settings are configured on mount; load default account reference
   useEffect(() => {
     getSettings()
-      .then((s) => setConfigured(s.is_configured))
+      .then((s) => {
+        setConfigured(s.is_configured);
+        if (s.account_reference) {
+          setDefaultRef(s.account_reference);
+          setForm((f) => ({ ...f, reference: s.account_reference }));
+        }
+      })
       .catch(() => setConfigured(false));
   }, []);
 
@@ -151,7 +158,7 @@ export default function HomePage() {
     socketRef.current?.disconnect();
     setPayment(null);
     setElapsed(0);
-    setForm({ phone: '', amount: '', reference: '', description: '', cashier_note: '' });
+    setForm({ phone: '', amount: '', reference: defaultRef, description: '', cashier_note: '' });
   };
 
   const handleRetry = () => {
@@ -266,12 +273,16 @@ export default function HomePage() {
               </label>
               <input
                 type="text"
-                placeholder="e.g. INV-001 or POS-12345"
+                placeholder="e.g. 0740240877"
                 value={form.reference}
-                onChange={(e) => setForm({ ...form, reference: e.target.value })}
-                className="input-field"
+                onChange={(e) => !defaultRef && setForm({ ...form, reference: e.target.value })}
+                readOnly={!!defaultRef}
+                className={`input-field ${defaultRef ? 'opacity-60 cursor-not-allowed' : ''}`}
                 maxLength={100}
               />
+              {defaultRef && (
+                <p className="text-gray-500 text-xs mt-1">Fixed to your Equity account — change in Settings</p>
+              )}
             </div>
 
             {/* Description */}
