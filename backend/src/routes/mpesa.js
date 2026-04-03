@@ -22,9 +22,15 @@ router.post('/stkpush', async (req, res) => {
   try {
     stkResponse = await initiateStkPush({ phone, amount: parsedAmount, reference, description });
   } catch (err) {
-    console.error('STK Push error:', err.response?.data || err.message);
-    const errMsg = err.response?.data?.errorMessage || err.message;
-    return res.status(502).json({ error: `STK Push failed: ${errMsg}` });
+    const safaricomBody = err.response?.data;
+    console.error('STK Push error:', err.response?.status, JSON.stringify(safaricomBody) || err.message);
+    const errMsg =
+      safaricomBody?.errorMessage ||
+      safaricomBody?.error_description ||
+      (typeof safaricomBody === 'string' ? safaricomBody : null) ||
+      (safaricomBody ? JSON.stringify(safaricomBody) : null) ||
+      err.message;
+    return res.status(502).json({ error: errMsg });
   }
 
   if (stkResponse.ResponseCode !== '0') {
